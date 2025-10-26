@@ -29,6 +29,10 @@ public class Program
             Console.Write("Table Name (ej. ProfitabilityRating): ");
             string tableName = ReadOrDefault("");
 
+            string outputDir = Path.Combine(Directory.GetCurrentDirectory(), "Generated_SPs");
+            Console.Write($"Salida de archivos: ({outputDir})");
+            outputDir = ReadOrDefault(outputDir);
+
             if (string.IsNullOrEmpty(connectionString) || string.IsNullOrEmpty(tableName))
             {
                 throw new ArgumentException("La Connection String y el Table Name no pueden estar vacíos.");
@@ -57,7 +61,7 @@ public class Program
             };
 
             // 4. Guardar archivos
-            string outputDir = Path.Combine(Directory.GetCurrentDirectory(), "Generated_SPs");
+            
             Directory.CreateDirectory(outputDir);
 
             foreach (var sp in procedures)

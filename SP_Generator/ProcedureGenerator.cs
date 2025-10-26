@@ -50,6 +50,7 @@ namespace SP_Generator
             sb.AppendLine(GenerateHeader(procedureName, inputParams, "Crea un nuevo registro en la tabla."));
             sb.AppendLine($"CREATE PROCEDURE [{_schemaName}].[{procedureName}]");
             sb.AppendLine(FormatParamsList(inputParams));
+            sb.AppendLine("--@Encryptable: WITH ENCRYPTION");
             sb.AppendLine("AS");
             sb.AppendLine("BEGIN");
             sb.AppendLine("    SET NOCOUNT ON;");
@@ -90,6 +91,7 @@ namespace SP_Generator
             sb.AppendLine(GenerateHeader(procedureName, _pkColumns, "Obtiene un registro por su Clave Primaria."));
             sb.AppendLine($"CREATE PROCEDURE [{_schemaName}].[{procedureName}]");
             sb.AppendLine(FormatParamsList(_pkColumns));
+            sb.AppendLine("--@Encryptable: WITH ENCRYPTION");
             sb.AppendLine("AS");
             sb.AppendLine("BEGIN");
             sb.AppendLine("    SET NOCOUNT ON;");
@@ -123,6 +125,7 @@ namespace SP_Generator
             sb.AppendLine(GenerateHeader(procedureName, _allParamsForUpdate, "Actualiza un registro existente por su Clave Primaria."));
             sb.AppendLine($"CREATE PROCEDURE [{_schemaName}].[{procedureName}]");
             sb.AppendLine(FormatParamsList(_allParamsForUpdate));
+            sb.AppendLine("--@Encryptable: WITH ENCRYPTION");
             sb.AppendLine("AS");
             sb.AppendLine("BEGIN");
             sb.AppendLine("    SET NOCOUNT ON;");
@@ -154,6 +157,7 @@ namespace SP_Generator
             var sb = new StringBuilder();
             sb.AppendLine(GenerateHeader(procedureName, new List<ColumnSchema>(), "Obtiene una lista de todos los registros."));
             sb.AppendLine($"CREATE PROCEDURE [{_schemaName}].[{procedureName}]");
+            sb.AppendLine("--@Encryptable: WITH ENCRYPTION");
             sb.AppendLine("AS");
             sb.AppendLine("BEGIN");
             sb.AppendLine("    SET NOCOUNT ON;");
