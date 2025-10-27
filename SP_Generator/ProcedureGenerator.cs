@@ -47,7 +47,7 @@ namespace SP_Generator
             var inputParams = _allColumns.Where(c => !c.IsIdentity && !c.IsExcluded).ToList();
 
             var sb = new StringBuilder();
-            sb.AppendLine(GenerateHeader(procedureName, inputParams, "Crea un nuevo registro en la tabla."));
+            sb.AppendLine(GenerateHeader(procedureName, inputParams, "Crea un nuevo registro en la tabla.", "Regresa un resulset (InsertedId) con el ID del nuevo registro"));
             sb.AppendLine($"CREATE PROCEDURE [{_schemaName}].[{procedureName}]");
             sb.AppendLine(FormatParamsList(inputParams));
             sb.AppendLine("--@Encryptable: WITH ENCRYPTION");
@@ -66,8 +66,15 @@ namespace SP_Generator
             sb.AppendLine($"            {FormatParamsList(inputParams, "            ", withTypes: false)}");
             sb.AppendLine("        );");
             sb.AppendLine();
-            sb.AppendLine("        -- Opcional: Retornar el ID o el registro creado");
-            sb.AppendLine("        -- SELECT SCOPE_IDENTITY() AS InsertedId;");
+            if (_allColumns.Count(x=>x.IsPk)==1)
+            {
+                sb.AppendLine("        SELECT SCOPE_IDENTITY() AS InsertedId;");
+            }
+            else
+            {
+                sb.AppendLine("        -- Opcional: Retornar el ID o el registro creado");
+                sb.AppendLine("        -- SELECT SCOPE_IDENTITY() AS InsertedId;");
+            }
             sb.AppendLine();
             sb.AppendLine("        COMMIT TRANSACTION;");
             sb.AppendLine("    END TRY");
@@ -88,7 +95,7 @@ namespace SP_Generator
             string procedureName = $"{_procedureNameBase}_Get";
 
             var sb = new StringBuilder();
-            sb.AppendLine(GenerateHeader(procedureName, _pkColumns, "Obtiene un registro por su Clave Primaria."));
+            sb.AppendLine(GenerateHeader(procedureName, _pkColumns, "Obtiene un registro por su Clave Primaria.","Regresa un registro por si clave primaria."));
             sb.AppendLine($"CREATE PROCEDURE [{_schemaName}].[{procedureName}]");
             sb.AppendLine(FormatParamsList(_pkColumns));
             sb.AppendLine("--@Encryptable: WITH ENCRYPTION");
@@ -122,7 +129,7 @@ namespace SP_Generator
             string procedureName = $"{_procedureNameBase}_Update";
 
             var sb = new StringBuilder();
-            sb.AppendLine(GenerateHeader(procedureName, _allParamsForUpdate, "Actualiza un registro existente por su Clave Primaria."));
+            sb.AppendLine(GenerateHeader(procedureName, _allParamsForUpdate, "Actualiza un registro existente por su Clave Primaria.","Nada"));
             sb.AppendLine($"CREATE PROCEDURE [{_schemaName}].[{procedureName}]");
             sb.AppendLine(FormatParamsList(_allParamsForUpdate));
             sb.AppendLine("--@Encryptable: WITH ENCRYPTION");
@@ -155,7 +162,7 @@ namespace SP_Generator
             string procedureName = $"{_procedureNameBase}_List";
 
             var sb = new StringBuilder();
-            sb.AppendLine(GenerateHeader(procedureName, new List<ColumnSchema>(), "Obtiene una lista de todos los registros."));
+            sb.AppendLine(GenerateHeader(procedureName, new List<ColumnSchema>(), "Obtiene una lista de todos los registros.", "Regresa un resulset de registros."));
             sb.AppendLine($"CREATE PROCEDURE [{_schemaName}].[{procedureName}]");
             sb.AppendLine("--@Encryptable: WITH ENCRYPTION");
             sb.AppendLine("AS");
@@ -183,7 +190,8 @@ namespace SP_Generator
 
         #region Helpers de Formato SQL
 
-        private string GenerateHeader(string procedureName, List<ColumnSchema> parameters, string description)
+        private string GenerateHeader(string procedureName, List<ColumnSchema> parameters, string description,
+            string returnProcedure = "[Descripción del conjunto de resultados]")
         {
             var sb = new StringBuilder();
             sb.AppendLine("/*******************************************************************************");
@@ -207,12 +215,12 @@ namespace SP_Generator
 
             sb.AppendLine("--");
             sb.AppendLine("-- Retorno:");
-            sb.AppendLine("--   [Descripción del conjunto de resultados]");
+            sb.AppendLine($"--   {returnProcedure}");
             sb.AppendLine("--");
             sb.AppendLine("-- Historial de Modificaciones:");
-            sb.AppendLine("--   Fecha       Autor        Descripción");
-            sb.AppendLine("--   ----------  -----------  -------------------------------------------");
-            sb.AppendLine($"--   {_creationDate}  {_author}  Versión inicial.");
+            sb.AppendLine("--   Fecha       \t\tAutor        \t\tDescripción");
+            sb.AppendLine("--   ----------  \t\t-----------  \t\t-------------------------------------------");
+            sb.AppendLine($"--   {_creationDate} \t\t{_author} \t\t\tVersión inicial.");
             sb.AppendLine("*******************************************************************************/");
             return sb.ToString();
         }
@@ -245,12 +253,12 @@ namespace SP_Generator
 
         private string FormatColumnList(List<ColumnSchema> columns, string indent = "    ")
         {
-            return string.Join(Environment.NewLine + indent, columns.Select(c => $"[{c.ColumnName}]"));
+            return string.Join(Environment.NewLine + indent + ", ", columns.Select(c => $"[{c.ColumnName}]"));
         }
 
         private string FormatSetList(List<ColumnSchema> columns, string indent = "    ")
         {
-            return string.Join(Environment.NewLine + indent, columns.Select(c => $"[{c.ColumnName}] = @{c.ColumnName},"));
+            return string.Join(Environment.NewLine + indent + ", ", columns.Select(c => $"[{c.ColumnName}] = @{c.ColumnName}"));
             // La coma extra al final se maneja quitándola o SQL Server la ignora en contextos modernos, 
             // pero para ser robustos, la quitamos del último.
             var lines = columns.Select(c => $"[{c.ColumnName}] = @{c.ColumnName}").ToList();
